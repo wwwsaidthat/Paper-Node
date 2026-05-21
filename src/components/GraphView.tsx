@@ -1,7 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
-import ForceGraph3D, { type ForceGraphMethods } from 'react-force-graph-3d'
-import * as THREE from 'three'
-import type { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js'
+import ForceGraph2D, { type ForceGraphMethods } from 'react-force-graph-2d'
 import type { PaperCard, RelationType } from '../papers/types'
 
 type GraphNode = {
@@ -18,20 +16,15 @@ type GraphLink = {
 
 const hashToColor = (input: string) => {
   let hash = 0
-  for (let i = 0; i < input.length; i++) hash = (hash * 31 + input.charCodeAt(i)) | 0
+  for (let i = 0; i < input.length; i++)
+    hash = (hash * 31 + input.charCodeAt(i)) | 0
   const hue = Math.abs(hash) % 360
   return `hsl(${hue} 70% 55%)`
 }
 
-const randomOnSphere = (radius: number) => {
-  const u = Math.random()
-  const v = Math.random()
-  const theta = 2 * Math.PI * u
-  const phi = Math.acos(2 * v - 1)
-  const x = radius * Math.sin(phi) * Math.cos(theta)
-  const y = radius * Math.sin(phi) * Math.sin(theta)
-  const z = radius * Math.cos(phi)
-  return { x, y, z }
+const randomOnCircle = (radius: number) => {
+  const theta = 2 * Math.PI * Math.random()
+  return { x: radius * Math.cos(theta), y: radius * Math.sin(theta) }
 }
 
 export function GraphView(props: {
@@ -44,6 +37,7 @@ export function GraphView(props: {
     undefined
   )
   const wrapRef = useRef<HTMLDivElement | null>(null)
+  const [size, setSize] = useState<{ w: number; h: number } | null>(null)
   const [callout, setCallout] = useState<{
     x: number
     y: number
@@ -51,16 +45,26 @@ export function GraphView(props: {
     oneSentence: string
   } | null>(null)
 
+  useEffect(() => {
+    const el = wrapRef.current
+    if (!el) return
+    const ro = new ResizeObserver((entries) => {
+      const r = entries[0]?.contentRect
+      if (!r) return
+      setSize({ w: Math.max(1, Math.floor(r.width)), h: Math.max(1, Math.floor(r.height)) })
+    })
+    ro.observe(el)
+    return () => ro.disconnect()
+  }, [])
+
   const graphData = useMemo(() => {
     const filtered = props.cards.filter((c) => c.topics.includes(props.activeTopic))
     const idSet = new Set(filtered.map((c) => c.id))
 
-    const nodes: Array<GraphNode & { x?: number; y?: number; z?: number }> = filtered.map(
-      (c) => {
-        const pos = randomOnSphere(120)
-        return { id: c.id, name: c.title, topics: c.topics, ...pos }
-      }
-    )
+    const nodes: Array<GraphNode & { x?: number; y?: number }> = filtered.map((c) => {
+      const pos = randomOnCircle(220)
+      return { id: c.id, name: c.title, topics: c.topics, ...pos }
+    })
 
     const links: GraphLink[] = []
     for (const c of filtered) {
@@ -88,18 +92,18 @@ export function GraphView(props: {
       }
 
       const node = graphData.nodes.find((n) => (n as GraphNode).id === selectedId) as
-        | (GraphNode & { x?: number; y?: number; z?: number })
+        | (GraphNode & { x?: number; y?: number })
         | undefined
 
       const card = props.cards.find((c) => c.id === selectedId)
 
-      if (!node || !card || node.x == null || node.y == null || node.z == null) {
+      if (!node || !card || node.x == null || node.y == null) {
         if (callout !== null) setCallout(null)
         raf = requestAnimationFrame(tick)
         return
       }
 
-      const screen = fg.graph2ScreenCoords(node.x, node.y, node.z)
+      const screen = fg.graph2ScreenCoords(node.x, node.y)
       const rect = wrap.getBoundingClientRect()
       const padding = 8
       const x = Math.max(padding, Math.min(rect.width - padding, screen.x))
@@ -131,38 +135,6 @@ export function GraphView(props: {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [props.selectedId, props.cards, graphData, props.activeTopic])
 
-  useEffect(() => {
-    const fg = fgRef.current
-    if (!fg) return
-
-    const scene = fg.scene()
-    scene.background = new THREE.Color('#0b1020')
-
-    const sphere = new THREE.Mesh(
-      new THREE.SphereGeometry(130, 32, 32),
-      new THREE.MeshBasicMaterial({
-        color: 0x4b6cb7,
-        transparent: true,
-        opacity: 0.08,
-        wireframe: true,
-      })
-    )
-    sphere.name = 'globe-sphere'
-    scene.add(sphere)
-
-    const controls = fg.controls() as unknown as OrbitControls
-    controls.enableDamping = true
-    controls.autoRotate = true
-    controls.autoRotateSpeed = 0.25
-
-    fg.cameraPosition({ z: 320 })
-
-    return () => {
-      const existing = scene.getObjectByName('globe-sphere')
-      if (existing) scene.remove(existing)
-    }
-  }, [props.activeTopic])
-
   const relationColor = (t: RelationType) => {
     switch (t) {
       case 'combine':
@@ -188,9 +160,12 @@ export function GraphView(props: {
       ref={wrapRef}
       style={{ width: '100%', height: '100%', position: 'relative' }}
     >
-      <ForceGraph3D
+      <ForceGraph2D
         ref={fgRef}
         graphData={graphData}
+        width={size?.w}
+        height={size?.h}
+        backgroundColor="#0b1020"
         nodeLabel={(n) => (n as GraphNode).name}
         nodeColor={(n) => {
           const node = n as GraphNode
@@ -200,7 +175,9 @@ export function GraphView(props: {
         linkColor={(l) => relationColor((l as GraphLink).type)}
         linkWidth={(l) => {
           const link = l as GraphLink
-          return link.source === props.selectedId || link.target === props.selectedId ? 2 : 1
+          return link.source === props.selectedId || link.target === props.selectedId
+            ? 2
+            : 1
         }}
         linkDirectionalArrowLength={(l) => {
           const t = (l as GraphLink).type
