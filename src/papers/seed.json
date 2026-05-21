@@ -1,0 +1,95 @@
+[
+  {
+    "id": "seed-security-1",
+    "title": "Safety Anchor-SBR",
+    "topics": ["安全"],
+    "year": 2026,
+    "authors": "Guoxin Lu 1 Letian ShaB 1 Qing Wang 1 Peijie Sun 1 Hao Zhou 1 Hua Dai 1 Fu Xiao ",
+    "venue": "arXiv",
+    "links": [{ "label": "PDF", "url": "/Users/wwwsaidthat/Documents/YKFBlock.github.io/posts/科研/论文阅读/安全/safety-anchor" }],
+    "oneSentence": "在信息瓶颈处设防",
+    "threeMethod": 
+    "前人的方法可以被多次的有害微调绕过防线，本质原因是大模型参数的冗余性；在信息几何瓶颈处设防，在decoder部分引入安全约束；微调数据集和安全数据集不同，安全对齐的模型和微调后的模型对于安全数据集的最后一个token的最后一层transformer输出h_final差异作为loss中的一项进行计算。",
+    "contributions": [
+      "提出之前方法存在的问题，并设计实验证明之前方法的问题真是存在",
+      "设计新的安全对齐方法，在信息几何瓶颈处设防，有效防止有害微调绕过防线。"
+    ],
+    "keyEvidence": "",
+    "reproduciblePoints": "",
+    "limitations": "",
+    "relations": [],
+    "takeAway": "学习这篇论文的写作思路，寻找前人方法中的不足之处，并验证不足之处，从这个作为出发点提出一个新的方法，解决之前方法的问题，达到更好的效果。"
+  },
+  {
+    "id": "seed-mrl-1",
+    "title": "Matryoshka Representation Learning-MRL",
+    "topics": ["MRL"],
+    "year": 2024,
+    "authors": "Aditya Kusupati∗ †⋄, Gantavya Bhatt∗†, Aniket Rege∗†,Matthew Wallingford†, Aditya Sinha⋄, Vivek Ramanujan†, William Howard-Snyder†,Kaifeng Chen⋄, Sham Kakade‡, Prateek Jain⋄ and Ali Farhadi†",
+    "venue": "arXiv",
+    "links": [],
+    "oneSentence": "解决同一个数据集面对下游不同的任务场景需要不同维度向量表示的情况，并可以自适应部署选择不同的表示。",
+    "threeMethod": "只训练一次，将一次训练出来的向量按照不同的监督的维度数进行loss的计算，统一进行训练，不同维度的向量可以自适应选择。",
+    "contributions": ["", ""],
+    "keyEvidence": "",
+    "reproduciblePoints": "",
+    "limitations": "",
+    "relations": [],
+    "takeAway": "学习这种思想，大向量嵌套小向量，提高小向量的精度，同时保持大向量的效率，而且根据实际场景还能节省算力"
+  },
+  {
+    "id": "seed-mrl-2",
+    "title": "Deep Graph Contrastive Representation Learning-GRACE",
+    "topics": ["MRL"],
+    "year": 2020,
+    "authors":"Yanqiao Zhu1,2∗ Yichen Xu3∗,† Feng Yu1,2 Qiang Liu4,5 Shu Wu1,2 Liang Wang1,2",
+    "venue": "arXiv",
+    "links": [],
+    "oneSentence": "将无监督的对比学习带入图表示学习中",
+    "threeMethod": "图通过随机的方式生成两个视图，让这两个视图尽可能相近，采用正负样本一起学习的方式，正样本越来越近，负样本越来越远，两个视图中对应的点互为正样本其他的点都是负样本",
+    "contributions": ["", ""],
+    "keyEvidence": "",
+    "reproduciblePoints": "",
+    "limitations": "",
+    "relations": [{ "toId": "seed-mrl-1", "type": "combine", "note": "可以把俄罗斯套娃的思想用在图表示学习中，两者结合实现图表示学习的自适应选择" }],
+    "takeAway": "首次将对比学习带入图表示学习中"
+  },
+  {
+    "id": "seed-mrl-3",
+    "title" : "Deep Graph Infomax-DGI",
+    "topics": ["MRL"],
+    "year": 2018,
+    "authors":"Petar Velickovi etc",
+    "venue": "arXiv",
+    "links": [],
+    "oneSentence": "用一个向量表示图，保证整体和局部的互信息最大化",
+    "threeMethod": "",
+    "contributions": ["", ""],
+    "keyEvidence": "",
+    "reproduciblePoints": "",
+    "limitations": "",
+    "relations": [
+      "seed-mrl-1"
+    ],
+    "takeAway": "常用的图表示学习方法"
+    },
+    {
+    "id": "seed-mrl-4",
+    "title":"CCA-SSG",
+    "topics": ["MRL"],
+    "year": 2021,
+    "authors":"Hengrui Zhang1∗, Qitian Wu2, Junchi Yan2, David Wipf3, Philip S. Yu1†",
+    "venue": "arXiv",
+    "links": [],
+    "oneSentence": "类似于GRACE，但是并没有负样本减轻了计算负担，保证向量维度之间的冗余降到最低",
+    "threeMethod": "",
+    "contributions": ["", ""],
+    "keyEvidence": "",
+    "reproduciblePoints": "",
+    "limitations": "",
+    "relations": [
+      "seed-mrl-1"
+    ],
+    "takeAway": "常用的图表示学习方法"
+    }
+]
