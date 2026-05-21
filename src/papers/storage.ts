@@ -1,7 +1,17 @@
 import type { PaperCard, PaperLink, RelationType } from './types'
-import { seedCards } from './seed'
+import { seedCards, seedSignature } from './seed'
 
 const STORAGE_KEY = 'paper-cards.v1'
+const SEED_SIGNATURE_KEY = 'paper-cards.seedSignature.v1'
+
+const mergeSeedIntoExisting = (existing: PaperCard[], seeded: PaperCard[]) => {
+  const byId = new Map<string, PaperCard>()
+  for (const c of existing) byId.set(c.id, c)
+  for (const s of seeded) byId.set(s.id, s)
+  return Array.from(byId.values()).sort((a, b) =>
+    a.updatedAt < b.updatedAt ? 1 : -1
+  )
+}
 
 const normalizeCards = (raw: unknown): PaperCard[] => {
   if (!Array.isArray(raw)) return []
@@ -82,11 +92,21 @@ export const loadCards = (): PaperCard[] => {
     if (!raw) {
       const seeded = seedCards()
       localStorage.setItem(STORAGE_KEY, JSON.stringify(seeded))
+      localStorage.setItem(SEED_SIGNATURE_KEY, seedSignature)
       return seeded
     }
 
     const parsed = JSON.parse(raw) as unknown
-    return normalizeCards(parsed)
+    const cards = normalizeCards(parsed)
+    const storedSeedSig = localStorage.getItem(SEED_SIGNATURE_KEY)
+    if (storedSeedSig !== seedSignature) {
+      const seeded = seedCards()
+      const merged = mergeSeedIntoExisting(cards, seeded)
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(merged))
+      localStorage.setItem(SEED_SIGNATURE_KEY, seedSignature)
+      return merged
+    }
+    return cards
   } catch {
     return []
   }

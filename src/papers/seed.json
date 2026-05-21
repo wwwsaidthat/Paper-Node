@@ -68,9 +68,7 @@
     "keyEvidence": "",
     "reproduciblePoints": "",
     "limitations": "",
-    "relations": [
-      "seed-mrl-1"
-    ],
+    "relations": [{"toId": "seed-mrl-1", "type": "combine", "note": "可以把俄罗斯套娃的思想用在DGI中，两者结合实现图表示学习的自适应选择" }],
     "takeAway": "常用的图表示学习方法"
     },
     {
@@ -87,9 +85,7 @@
     "keyEvidence": "",
     "reproduciblePoints": "",
     "limitations": "",
-    "relations": [
-      "seed-mrl-1"
-    ],
+    "relations": [{"toId": "seed-mrl-1", "type": "combine", "note": "可以把俄罗斯套娃的思想用在CCA-SSG中，两者结合实现图表示学习的自适应选择" }],
     "takeAway": "常用的图表示学习方法"
     }
 ]

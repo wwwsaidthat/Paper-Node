@@ -10,6 +10,7 @@ function App() {
   const [activeTopic, setActiveTopic] = useState('安全')
   const [selectedId, setSelectedId] = useState<string | null>(null)
   const [selectedStackIds, setSelectedStackIds] = useState<string[]>([])
+  const [panelMode, setPanelMode] = useState<'view' | 'edit' | 'create'>('view')
   const [query, setQuery] = useState('')
   const importRef = useRef<HTMLInputElement | null>(null)
 
@@ -31,6 +32,7 @@ function App() {
   const selectCard = (id: string | null) => {
     setSelectedId(id)
     if (!id) return
+    setPanelMode('view')
     setSelectedStackIds((prev) => [id, ...prev.filter((x) => x !== id)].slice(0, 50))
   }
 
@@ -45,6 +47,7 @@ function App() {
   const clearStack = () => {
     setSelectedStackIds([])
     setSelectedId(null)
+    setPanelMode('view')
   }
 
   const create = (draft: PaperDraft) => {
@@ -176,6 +179,8 @@ function App() {
             activeTopic={effectiveTopic}
             selectedId={selectedId}
             selectedStackIds={selectedStackIds}
+            mode={panelMode}
+            onModeChange={setPanelMode}
             query={query}
             onQueryChange={setQuery}
             onSelect={selectCard}

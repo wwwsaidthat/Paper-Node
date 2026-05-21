@@ -424,6 +424,8 @@ export function PaperPanel(props: {
   activeTopic: string
   selectedId: string | null
   selectedStackIds: string[]
+  mode: Mode
+  onModeChange: (mode: Mode) => void
   query: string
   onQueryChange: (q: string) => void
   onSelect: (id: string | null) => void
@@ -433,7 +435,6 @@ export function PaperPanel(props: {
   onUpdate: (id: string, draft: PaperDraft) => void
   onDelete: (id: string) => void
 }) {
-  const [mode, setMode] = useState<Mode>('view')
   const [openStackIds, setOpenStackIds] = useState<Set<string>>(() => new Set())
   const selected = useMemo(
     () => props.cards.find((c) => c.id === props.selectedId) ?? null,
@@ -457,7 +458,7 @@ export function PaperPanel(props: {
   )
 
   const startCreate = () => {
-    setMode('create')
+    props.onModeChange('create')
     const draft = createEmptyDraft([props.activeTopic])
     setForm(draftToForm(draft, props.cards))
     props.onSelect(null)
@@ -465,12 +466,12 @@ export function PaperPanel(props: {
 
   const startEdit = () => {
     if (!selected) return
-    setMode('edit')
+    props.onModeChange('edit')
     setForm(draftToForm(cardToDraft(selected), props.cards))
   }
 
   const cancel = () => {
-    setMode('view')
+    props.onModeChange('view')
     if (selected) setForm(draftToForm(cardToDraft(selected), props.cards))
   }
 
@@ -478,22 +479,22 @@ export function PaperPanel(props: {
     const draft = formToDraft(form)
     if (!draft.title) return
 
-    if (mode === 'create') {
+    if (props.mode === 'create') {
       props.onCreate(draft)
-      setMode('view')
+      props.onModeChange('view')
       return
     }
 
-    if (mode === 'edit' && selected) {
+    if (props.mode === 'edit' && selected) {
       props.onUpdate(selected.id, draft)
-      setMode('view')
+      props.onModeChange('view')
     }
   }
 
   const deleteSelected = () => {
     if (!selected) return
     props.onDelete(selected.id)
-    setMode('view')
+    props.onModeChange('view')
   }
 
   const visibleCards = useMemo(() => {
@@ -513,6 +514,11 @@ export function PaperPanel(props: {
     return formatCardText(selected, visibleCards.byId)
   }, [selected, visibleCards.byId])
 
+  const selectedJson = useMemo(() => {
+    if (!selected) return ''
+    return JSON.stringify(selected, null, 2)
+  }, [selected])
+
   return (
     <div className="panel">
       <div className="panel-header">
@@ -521,12 +527,12 @@ export function PaperPanel(props: {
           <button className="btn" onClick={startCreate}>
             新建
           </button>
-          {selected && mode === 'view' ? (
+          {selected && props.mode === 'view' ? (
             <button className="btn" onClick={startEdit}>
               编辑
             </button>
           ) : null}
-          {selected && mode !== 'create' ? (
+          {selected && props.mode !== 'create' ? (
             <button className="btn danger" onClick={deleteSelected}>
               删除
             </button>
@@ -551,7 +557,7 @@ export function PaperPanel(props: {
                 className={`list-item ${props.selectedId === c.id ? 'active' : ''}`}
                 onClick={() => {
                   props.onSelect(c.id)
-                  setMode('view')
+                  props.onModeChange('view')
                 }}
               >
                 <div className="list-title">{c.title}</div>
@@ -566,8 +572,49 @@ export function PaperPanel(props: {
         </div>
 
         <div className="content">
-          {mode === 'view' ? (
+          {props.mode === 'view' ? (
             <div className="stack">
+              <div className="board-sticky">
+                <div className="board-row">
+                  <div className="detail-textbox">
+                    <div className="detail-textbox-title">
+                      论文详情（文本）
+                      {selected ? `：${selected.title}` : ''}
+                    </div>
+                    <textarea
+                      className="detail-textarea"
+                      readOnly
+                      value={selected ? selectedText : '点击任意节点后，这里会显示该论文的文本化详情。'}
+                      rows={10}
+                    />
+                  </div>
+
+                  <div className="json-board">
+                    <div className="json-board-header">
+                      <div className="json-board-title">论文详情（JSON 看板）</div>
+                      <button
+                        className="btn ghost"
+                        type="button"
+                        disabled={!selected}
+                        onClick={() => {
+                          if (!selected) return
+                          void navigator.clipboard.writeText(selectedJson)
+                        }}
+                      >
+                        复制 JSON
+                      </button>
+                    </div>
+                    <pre className="json-board-pre">
+                      <code>
+                        {selected
+                          ? selectedJson
+                          : '{\n  "tip": "点击任意节点后，这里会显示该论文卡片的完整 JSON"\n}'}
+                      </code>
+                    </pre>
+                  </div>
+                </div>
+              </div>
+
               <div className="stack-header">
                 <div className="stack-title">已选卡片（可叠加）</div>
                 <div className="stack-actions">
@@ -576,18 +623,6 @@ export function PaperPanel(props: {
                   </button>
                 </div>
               </div>
-
-              {selected ? (
-                <div className="detail-textbox">
-                  <div className="detail-textbox-title">论文详情（文本）</div>
-                  <textarea
-                    className="detail-textarea"
-                    readOnly
-                    value={selectedText}
-                    rows={10}
-                  />
-                </div>
-              ) : null}
 
               {stackedForTopic.length ? (
                 <div className="stack-list">
@@ -612,7 +647,7 @@ export function PaperPanel(props: {
                           className="stack-summary"
                           onClick={() => {
                             props.onSelect(c.id)
-                            setMode('view')
+                            props.onModeChange('view')
                           }}
                         >
                           <div className="stack-summary-main">
@@ -658,10 +693,10 @@ export function PaperPanel(props: {
             </div>
           ) : null}
 
-          {mode !== 'view' ? (
+          {props.mode !== 'view' ? (
             <div className="editor">
               <div className="editor-title">
-                {mode === 'create' ? '新建卡片' : '编辑卡片'}
+                {props.mode === 'create' ? '新建卡片' : '编辑卡片'}
               </div>
               <div className="field">
                 <div className="label">标题</div>
@@ -802,7 +837,7 @@ export function PaperPanel(props: {
             </div>
           ) : null}
 
-          {mode === 'view' ? null : null}
+          {props.mode === 'view' ? null : null}
         </div>
       </div>
     </div>

@@ -3,6 +3,14 @@ import seedRaw from './seed.json'
 
 const iso = () => new Date().toISOString()
 
+const hashString = (input: string) => {
+  let hash = 0
+  for (let i = 0; i < input.length; i++) hash = (hash * 31 + input.charCodeAt(i)) | 0
+  return String(Math.abs(hash))
+}
+
+export const seedSignature = hashString(JSON.stringify(seedRaw))
+
 type SeedCardJson = Omit<PaperCard, 'createdAt' | 'updatedAt'> &
   Partial<Pick<PaperCard, 'createdAt' | 'updatedAt'>>
 
